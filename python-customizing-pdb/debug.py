@@ -1,0 +1,48 @@
+import inspect
+import pdb
+import sys
+
+from pympler import asizeof
+
+
+class Debug(pdb.Pdb):
+    def __init__(self, *args, **kwargs):
+        super(Debug, self).__init__(*args, **kwargs)
+        self.prompt = "[extended-pdb] "
+
+    def format_bytes(self, value, format):
+        unit_case_sensitive = "kb" if format == "" else format
+        unit = unit_case_sensitive.upper()
+
+        if unit == "KB":
+            converted = value / 1000
+        elif unit == "MB":
+            converted = value / 1000000
+        else:
+            converted = value
+            unit = "bytes"
+
+        return f"{converted:.2f} {unit}"
+
+    def do_args_memory_usage(self, arg):
+        co = self.curframe.f_code
+        dict = self.curframe_locals
+        n = co.co_argcount + co.co_kwonlyargcount
+        if co.co_flags & inspect.CO_VARARGS: n = n+1
+        if co.co_flags & inspect.CO_VARKEYWORDS: n = n+1
+
+        self.message("---- Args memory usage ----")
+        for i in range(n):
+            name = co.co_varnames[i]
+            if name in dict:
+                arg_size = asizeof.asizeof(dict[name])
+                self.message('%s = %s' % (name, self.format_bytes(arg_size, arg)))
+            else:
+                self.message('%s = *** undefined ***' % (name,))
+
+    do_amu = do_args_memory_usage
+
+
+def stop():
+    debugger = Debug()
+    debugger.set_trace(sys._getframe().f_back)
