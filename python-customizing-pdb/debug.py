@@ -5,26 +5,29 @@ import sys
 from pympler import asizeof
 
 
+KNOWN_UNITS = {"KB", "MB", "BYTES"}
+
 class Debug(pdb.Pdb):
     def __init__(self, *args, **kwargs):
         super(Debug, self).__init__(*args, **kwargs)
         self.prompt = "[extended-pdb] "
 
-    def format_bytes(self, value, format):
-        unit_case_sensitive = "kb" if format == "" else format
-        unit = unit_case_sensitive.upper()
+    def format_bytes(self, value: int, unit: str) -> str:
+        upper = unit.upper()
 
-        if unit == "KB":
+        # Forcing BYTES for unknown units
+        base_unit = upper if upper in KNOWN_UNITS else "BYTES"
+
+        if base_unit == "KB":
             converted = value / 1000
-        elif unit == "MB":
+        elif base_unit == "MB":
             converted = value / 1000000
         else:
             converted = value
-            unit = "bytes"
 
-        return f"{converted:.2f} {unit}"
+        return f"{converted:.2f} {base_unit}"
 
-    def do_args_memory_usage(self, arg):
+    def do_args_memory_usage(self, arg: str):
         co = self.curframe.f_code
         dict = self.curframe_locals
         n = co.co_argcount + co.co_kwonlyargcount

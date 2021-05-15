@@ -1,7 +1,7 @@
 from random import random
 
 
-def print_the_things(number, text, big_list):
+def print_the_things(number: int, text: str, big_list: list):
     import debug; debug.stop()  # custom breakpoint
 
     print(f"Number: {number}, Text: {text}, List: {big_list}")
